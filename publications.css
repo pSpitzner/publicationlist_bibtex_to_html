@@ -1,0 +1,22 @@
+.pub_list {
+    list-style: none;
+    margin: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.pub_list li { margin: 1.5rem 0; }
+
+/*we could nest this*/
+.pub_title { font-style: italic; font-weight: normal;}
+.pub_journal { font-weight: inherit; }
+
+.pub_abstract {
+  margin-top: .25rem;
+  margin-bottom: 1.0rem;
+  padding: .5rem;
+  font-style: italic;
+  /*border: 1px solid #fff;
+  border-color: var(--border-clr);
+  border-radius: 7.5px;*/
+}
+
