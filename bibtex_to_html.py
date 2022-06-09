@@ -2,15 +2,17 @@
 # @Author:        F. Paul Spitzner
 # @Email:         paul.spitzner@ds.mpg.de
 # @Created:       2021-02-08 14:06:35
-# @Last Modified: 2021-02-11 22:13:43
+# @Last Modified: 2022-06-09 15:46:19
 # ------------------------------------------------------------------------------ #
-# pip install pylatexenc, bibtexparser
+# pip install pylatexenc bibtexparser
 #
 # Simple script to generate a html list of publications from an existing
 # bibtex file, or to create one from scatch.
 #
 # I needed to cleanup my abstracts in zotero a bit. When fetching metadata
 # automatically, sometimes the introduction can get copied into bibtex fields.
+#
+# clean latex parsing for abstracts is still not there 100%
 # ------------------------------------------------------------------------------ #
 
 import bibtexparser
@@ -29,6 +31,14 @@ output_path = "/path/to/targe_file.html"
 
 # whether to include abstracts. this part is still a bit hacky, so disable if dislike.
 show_abstracts = True
+
+# whether to show the altmetric badge, this requires extra javascript on your page:
+# <script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+# see https://api.altmetric.com/embeds.html
+# to get arxiv ids automatically, see readme
+show_altmetric = True
+
+show_arxiv_badge = True
 
 # this gets placed before/after the main publist that is created in main()
 page_prefix = """
@@ -56,15 +66,19 @@ def main():
     global db, entries
     with open(bibtex_path) as bibtex_file:
         parser = BibTexParser(common_strings=True)
+        # do not skip non-standard bibtex fields
         parser.ignore_nonstandard_types = False
         db = bibtexparser.load(bibtex_file, parser=parser)
     print(f"Found {len(db.entries)} entries in '{bibtex_path}'")
 
     # put these into the order in which they should appear online. customize below
     cite_keys = [
-        "contreras_towards_2020",
+        "yamamoto_modular_2022",
+        "hagemann_intrinsic_2022",
+        "contreras_low_2021",
+        "leite_-synuclein_2022",
         "contreras_challenges_2021",
-        "spitzner_mr_2020",
+        "spitzner_mr_2021",
         "dehning_inferring_2020",
         "neto_unified_2020",
         "spitzner_droplet_2018",
@@ -72,57 +86,35 @@ def main():
         "fricke_scaling_2017",
     ]
 
-    entries = dict()
-    for key in cite_keys:
-        entries[key] = get_entry_for_citekey(db, key)
+    print(f"Fetching selected {len(cite_keys)} entries")
+    entries = get_entry_for_citekey(db, cite_keys)
 
     # ------------------------------------------------------------------------------ #
     # customize entries
     # ------------------------------------------------------------------------------ #
 
+    # preprints, remove year
+    entries["hagemann_intrinsic_2022"]["year"] = "submitted"
+    entries["hagemann_intrinsic_2022"]["journal"] = ""
+
+    entries["yamamoto_modular_2022"]["year"] = "submitted"
+    entries["yamamoto_modular_2022"]["journal"] = ""
+
     # badges should be a list of dicts, where each dict has 'name' and 'url'
-
-    entries["contreras_challenges_2021"]["badges"] = [
-        {"name": "arXiv", "url": "https://arxiv.org/abs/2009.05732"},
-    ]
-
-
-    entries["contreras_towards_2020"]["badges"] = [
-        {"name": "arXiv", "url": "https://arxiv.org/abs/2011.11413"},
-    ]
-    entries["contreras_towards_2020"]["year"] = "submitted"
-    entries["contreras_towards_2020"]["journal"] = ""
-
-
-    entries["spitzner_mr_2020"]["badges"] = [
+    entries["spitzner_mr_2021"]["badges"] = [
         {"name": "GitHub", "url": "https://github.com/Priesemann-Group/mrestimator"},
-        {"name": "arXiv", "url": "https://arxiv.org/abs/2007.03367"},
     ]
-    entries["spitzner_mr_2020"]["year"] = "under review"
-    entries["spitzner_mr_2020"]["journal"] = ""
 
 
     entries["dehning_inferring_2020"]["badges"] = [
         {"name": "GitHub", "url": "https://github.com/Priesemann-Group/covid19_inference_forecast"},
-        {"name": "arXiv", "url": "https://arxiv.org/abs/2004.01105"},
     ]
 
     entries["neto_unified_2020"]["badges"] = [
         {"name": "GitHub", "url": "https://github.com/Priesemann-Group/criticalavalanches"},
-        {"name": "arXiv", "url": "https://arxiv.org/abs/1910.09984"},
     ]
     entries["neto_unified_2020"]["year"] = "under review"
     entries["neto_unified_2020"]["journal"] = ""
-
-
-    entries["zierenberg_percolation_2017"]["badges"] = [
-        {"name": "arXiv", "url": "https://arxiv.org/abs/1708.02296"},
-    ]
-
-
-    entries["fricke_scaling_2017"]["badges"] = [
-        {"name": "arXiv", "url": "https://arxiv.org/abs/1703.10368 "},
-    ]
 
     # ------------------------------------------------------------------------------ #
     # or built custom entries from scratch. nested dict.
@@ -153,6 +145,7 @@ def main():
     # ------------------------------------------------------------------------------ #
     # build html source code
     # ------------------------------------------------------------------------------ #
+    print(f"Building html")
 
     html = ""
     html += page_prefix
@@ -225,14 +218,15 @@ def entry_to_html(entry):
             html += ', ' + entry['pages']
         html += '\n</span>\n'
 
-    # year
+    # year, only show this if we have a journal and not a preprint
     if 'year' in entry and len(entry['year']) > 0:
         html += '<span class="pub_year">\n'
         html += '(' + entry['year'] + ')'
         html += '\n</span>\n'
 
     # size-dependent newline before the badges, this uses bootstrap classes
-    html += '<br class="d-block d-lg-none">'
+    # html += '<br class="d-block d-lg-none">'
+    html += '<br class="d-block d-lg-block">'
 
     # abstract badge first (toggles whether the abstract is displayed or not)
     if show_abstracts and 'abstract' in entry and len(entry['abstract']) > 0:
@@ -248,17 +242,37 @@ def entry_to_html(entry):
 
 
     # badges for arxiv and the likes
+    def format_badge(name, url):
+        badge = '<span class="pub_badge">\n'
+        badge += '['
+        badge += '<a class="pub_badge_link"'
+        badge += 'href="' + url + '">'
+        badge += name
+        badge += '</a>'
+        badge += ']'
+        badge += '\n</span>\n'
+        return badge
+
     if 'badges' in entry and len(entry['badges']) > 0:
         for b in entry['badges']:
             assert 'url' in b and 'name' in b
-            html += '<span class="pub_badge">\n'
-            html += '['
-            html += '<a class="pub_badge_link"'
-            html += 'href="' + b['url'] + '">'
-            html += b['name']
-            html += '</a>'
-            html += ']'
-            html += '\n</span>\n'
+            html += format_badge(b['name'], b['url'])
+
+    # arxiv badge
+    if show_arxiv_badge and "arxiv_org_id" in entry:
+        html += format_badge("arXiv", "https://arxiv.org/abs/" + entry["arxiv_org_id"])
+
+    # altmetric badge
+    if show_altmetric and ("arxiv_org_id" in entry or "doi" in entry):
+        html += '<span data-badge-type="2" '
+        html += 'data-hide-no-mentions="true" '
+        html += 'class="altmetric-embed" '
+        # I prefer arxiv id over doi
+        if "arxiv_org_id" in entry:
+            html += f'data-arxiv-id="{entry["arxiv_org_id"]}"'
+        else:
+            html += f'data-doi="{entry["doi"]}"'
+        html += ' ></span>\n'
 
     html += '</div>\n' # journal group
 
@@ -286,6 +300,8 @@ def cleanup(raw):
         helper to clean up text that comes from bibtex and does not work well
         in html.
     """
+    # bibtex escapes stuff, which breaks parsing
+
     res = LatexNodes2Text().latex_to_text(raw)
     # res = res.replace("<p>", "")
     # res = res.replace("</p>", "")
@@ -300,15 +316,68 @@ def cleanup(raw):
     return res
 
 
-# %%
 def get_entry_for_citekey(db, key):
     """
         db : bibtex database
-        key : string, the citekey to look for
+        key : string, the citekey to look for, or list of strings
     """
+
+    if isinstance(key, list):
+        keys = key
+    else:
+        keys = [key]
+
+    entries = dict()
     for e in db.entries:
-        if "ID" in e and e["ID"] == key:
-            return e
+        if "ID" in e and e["ID"] in keys:
+           entries[e["ID"]] = e
+
+    for e in entries.values():
+        find_arxiv_id_in_entry(e, add_to_entry=True)
+
+    if len(entries) == 1:
+        return list(entries.values())[0]
+    return entries
+
+
+
+def find_arxiv_id_in_entry(entry, add_to_entry = True):
+    """
+        There are a bunch of different places where an arxiv.org id may be hidden in
+        the bibtex or biblatex files. Lets try some common places, and if we find it
+        set it as a custom key.
+
+        Adds (overwrites) `arxiv_org_id` if it can be found
+        and `add_to_entry` is True (default)
+    """
+
+    arxiv_id = None
+    while arxiv_id is None:
+        if "eprint" in entry.keys() and "eprinttype" in entry.keys():
+            # this is the default from BetterBibTex
+            if entry["eprinttype"].lower() == "arxiv":
+                arxiv_id = entry["eprint"]
+                break
+
+        if "doi" in entry.keys():
+            # as of 2022 arxiv preprints get DOIs as `arXiv.2201.NNNNN`
+            if "arXiv." in entry["doi"]:
+                arxiv_id = entry["doi"].split("arXiv.", 1)[1]
+
+        if "url" in entry.keys() and "arxiv.org/abs/" in entry["url"]:
+            # avoid bioarxiv
+            # https://www.biorxiv.org/content/early/2018/04/11/299859
+            arxiv_id = entry["url"].split("arxiv.org/abs/", 1)[1]
+            break
+        break
+
+    if add_to_entry and arxiv_id is not None:
+        entry["arxiv_org_id"] = arxiv_id
+
+    return arxiv_id
+
+
+
 
 
 def get_entries_for_author(db, author_strings):
@@ -330,7 +399,6 @@ def get_entries_for_author(db, author_strings):
     return res
 
 
-# %%
 def format_authors(entry, abbreviate_first=True, et_al_at=1000):
     """
         this is the way i like it, tweak as needed.
