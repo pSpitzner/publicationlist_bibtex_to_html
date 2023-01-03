@@ -1,14 +1,23 @@
 .pub_list {
-    list-style: none;
-    margin: 0;
-    padding-left: 1rem;
-    padding-right: 1rem;
+  list-style: none;
+  margin: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
-.pub_list li { margin: 1.5rem 0; }
+
+.pub_list li {
+  margin: 1.5rem 0;
+}
 
 /*we could nest this*/
-.pub_title { font-style: italic; font-weight: normal;}
-.pub_journal { font-weight: inherit; }
+.pub_title {
+  font-style: italic;
+  font-weight: normal;
+}
+
+.pub_journal {
+  font-weight: inherit;
+}
 
 .pub_abstract {
   margin-top: .25rem;
@@ -20,3 +29,20 @@
   border-radius: 7.5px;*/
 }
 
+.pub_badge {
+  margin-right: .15rem;
+}
+
+/* overwrite the bootstrap button for abstract toggling to match my theme */
+.pub_badge>.btn {
+  color: #fff;
+  background-color: #555;
+  border: 0px solid rgba(0, 0, 0, 0);
+  /* badges have a bit of a top-down gradient */
+  background-image: -webkit-linear-gradient(top, #5f5f5f 0%, #4c4c4c 100%);
+  /* the badges are 20px high, lets have roughly the same */
+  padding: 1px 7px;
+  font-size: 0.75rem;
+  text-shadow: 0 .8px 0 rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+}
