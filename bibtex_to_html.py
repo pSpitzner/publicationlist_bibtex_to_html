@@ -2,7 +2,7 @@
 # @Author:        F. Paul Spitzner
 # @Email:         paul.spitzner@ds.mpg.de
 # @Created:       2021-02-08 14:06:35
-# @Last Modified: 2023-01-03 20:51:40
+# @Last Modified: 2023-01-03 21:04:32
 # ------------------------------------------------------------------------------ #
 #
 # Github: https://github.com/pSpitzner/publicationlist_bibtex_to_html
@@ -57,6 +57,9 @@ use_shieldsio_for_badges = True
 # use a button for abstract or plain text? better customize for your needs, below.
 # best set to False if use_shieldsio_for_badges is False.
 use_bootstrap_button_for_abstract = True
+
+# if settings this to true, the hrefs will also have target="_blank"
+open_badge_links_in_new_tab = True
 
 
 
@@ -327,6 +330,8 @@ def entry_to_html(entry):
             html += f'data-arxiv-id="{entry["arxiv_org_id"]}"'
         else:
             html += f'data-doi="{entry["doi"]}"'
+        if open_badge_links_in_new_tab:
+            html += ' data-link-target="_blank"'
         html += ' ></div>\n'
         debug_string += f"badge(altmetric) "
 
@@ -463,8 +468,10 @@ def format_badge(**kwargs):
     if use_shieldsio_for_badges:
         badge = '<span class="pub_badge">\n'
         badge += '<a class="pub_badge_link"'
-        badge += 'href="' + kwargs['url'] + '">'
-        badge += '<img src="'
+        badge += 'href="' + kwargs['url'] + '"'
+        if open_badge_links_in_new_tab:
+            badge += ' target="_blank"'
+        badge += '><img src="'
 
         # prepate shildio badges
         if len(kwargs) == 2 and 'desc' in kwargs and 'url' in kwargs:
@@ -486,7 +493,10 @@ def format_badge(**kwargs):
         badge = '<span class="pub_badge">\n'
         badge += '['
         badge += '<a class="pub_badge_link"'
-        badge += 'href="' + kwargs['url'] + '">'
+        badge += 'href="' + kwargs['url'] + '"'
+        if open_badge_links_in_new_tab:
+            badge += ' target="_blank"'
+        badge += '>'
         badge += kwargs['desc']
         badge += '</a>'
         badge += ']'
