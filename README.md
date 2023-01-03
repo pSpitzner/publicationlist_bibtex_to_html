@@ -16,7 +16,8 @@ My recommendation, for now:
 * BBT will pick this up and populate the `eprint` and `eprinttype` fields in the exported `.bib`
 
 # Changelog
-- 23-01-03: added badges from [shields.io](https://shields.io/)
+- 23-01-03: added badges from [shields.io](https://shields.io/), fixed author white spaces and line wraps.
 
 # ToDo:
 - similar to arxiv, we could automate badges for github etc. into the extra field of zotero and filter the corresponding bibtex entry.
+- Fix latex parsing for abstracts, still a bit wonky.

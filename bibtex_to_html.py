@@ -2,7 +2,7 @@
 # @Author:        F. Paul Spitzner
 # @Email:         paul.spitzner@ds.mpg.de
 # @Created:       2021-02-08 14:06:35
-# @Last Modified: 2023-01-03 17:27:58
+# @Last Modified: 2023-01-03 20:51:40
 # ------------------------------------------------------------------------------ #
 #
 # Github: https://github.com/pSpitzner/publicationlist_bibtex_to_html
@@ -55,6 +55,7 @@ show_arxiv_badge = True
 use_shieldsio_for_badges = True
 
 # use a button for abstract or plain text? better customize for your needs, below.
+# best set to False if use_shieldsio_for_badges is False.
 use_bootstrap_button_for_abstract = True
 
 
@@ -68,10 +69,11 @@ page_prefix = """
 </head>
 
 <body>
+<!-- content, created with github.com/pSpitzner/publicationlist_bibtex_to_html -->
 <div class="row">
 <div id="content-publications" class="content animate col-12 pt-lg-2">
 
-<h2 class="d-inline d-sm-none">Publications</h2>
+        <h2 class="d-inline d-sm-none">Publications</h2>
 """
 
 page_suffix = """
@@ -244,7 +246,7 @@ def entry_to_html(entry):
         html += f'\n</{"a" if url_is_okay else "div"}>\n'
 
 
-    # I wanted journal, year and badges in one line -> spans enclosed in one div
+    # group all journal details
     html += '<div class="pub_journal_group">\n'
 
     # journal, volume, pages
@@ -265,25 +267,31 @@ def entry_to_html(entry):
         html += '(' + entry['year'] + ')'
         html += '\n</span>\n'
 
+    # close journal group
+    html += '</div>\n'
+
     # size-dependent newline before the badges, this uses bootstrap classes
     # html += '<br class="d-block d-lg-none">'
     html += '<br class="d-block d-lg-block">'
+
+    # group badges to avoid weird spacing issues
+    html += '<div class="pub_badge_group">\n'
 
     # abstract badge first (toggles whether the abstract is displayed or not)
     if show_abstracts and 'abstract' in entry and len(entry['abstract']) > 0:
         debug_string += "abstract "
 
         if use_bootstrap_button_for_abstract:
-            html += '<span class="pub_badge">\n'
+            html += '<div class="pub_badge">\n'
             html += '<span type="button" class="btn" '
             html += 'data-toggle="collapse" aria-expanded="false" '
             html += 'data-target="#abstract_' + entry['ID'] + '">'
             html += "Toggle abstract"
             html += '</span>'
-            html += '</span>\n'
+            html += '</div>\n'
 
         else:
-            html += '<span class="pub_badge">\n'
+            html += '<div class="pub_badge">\n'
             html += '['
             html += '<span class="fake_a pub_badge_link" '
             html += 'data-toggle="collapse" aria-expanded="false" '
@@ -291,7 +299,7 @@ def entry_to_html(entry):
             html += "Abstract"
             html += '</span>'
             html += ']\n'
-            html += '</span>\n'
+            html += '</div>\n'
 
 
     # arxiv badge
@@ -302,7 +310,7 @@ def entry_to_html(entry):
         )
         debug_string += f"badge(arXiv) "
 
-    # otther badges
+    # other badges
     if 'badges' in entry and len(entry['badges']) > 0:
         for b in entry['badges']:
             assert 'url' in b and 'desc' in b
@@ -311,7 +319,7 @@ def entry_to_html(entry):
 
     # altmetric badge
     if show_altmetric and ("arxiv_org_id" in entry or "doi" in entry):
-        html += '<span data-badge-type="2" '
+        html += '<div data-badge-type="2" '
         html += 'data-hide-no-mentions="true" '
         html += 'class="altmetric-embed" '
         # I prefer arxiv id over doi
@@ -319,10 +327,11 @@ def entry_to_html(entry):
             html += f'data-arxiv-id="{entry["arxiv_org_id"]}"'
         else:
             html += f'data-doi="{entry["doi"]}"'
-        html += ' ></span>\n'
+        html += ' ></div>\n'
         debug_string += f"badge(altmetric) "
 
-    html += '</div>\n' # journal group
+     # close badge group
+    html += '</div>\n'
 
     # abstract div
     if show_abstracts and 'abstract' in entry and len(entry['abstract']) > 0:
@@ -543,12 +552,16 @@ def format_authors(entry, abbreviate_first=True, et_al_at=1000):
 
     res = ""
     # now we have a list of authors nicely formatted, make this a readable
-    # one-liner for the webiste
+    # one-liner for the webiste.
+    # why the spans? we do not want to break white spaces after the initals
+    # and do this via some css. (white-space:nowrap;)
     if len(authors) > et_al_at:
-        res = authors[0] + " et al."
+        res = "<span>" + authors[0] + " et al." + "</span>"
     elif len(authors) == 1:
-        res = authors[0]
+        res = "<span>" + authors[0] + "</span>"
     else:
+        for adx, a in enumerate(authors):
+            authors[adx] = "<span>" + a + "</span>"
         res = authors[0]
         for a in authors[1:-1]:
             res += ", " + a

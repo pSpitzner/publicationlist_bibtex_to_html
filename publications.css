@@ -6,7 +6,16 @@
 }
 
 .pub_list li {
-  margin: 1.5rem 0;
+  margin: 1.0rem 0 1.5rem 0;
+}
+
+.pub_author {
+  text-align: left;
+}
+
+.pub_author span {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 /*we could nest this*/
@@ -29,8 +38,14 @@
   border-radius: 7.5px;*/
 }
 
+.pub_badge_group {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  margin-top: .15rem;
+}
+
 .pub_badge {
-  margin-right: .15rem;
+  margin-right: .3rem;
 }
 
 /* overwrite the bootstrap button for abstract toggling to match my theme */
@@ -40,8 +55,10 @@
   border: 0px solid rgba(0, 0, 0, 0);
   /* badges have a bit of a top-down gradient */
   background-image: -webkit-linear-gradient(top, #5f5f5f 0%, #4c4c4c 100%);
-  /* the badges are 20px high, lets have roughly the same */
-  padding: 1px 7px;
+  /* the badges are 20px high, lets have the same */
+  height: 20px;
+  line-height: 20px;
+  padding: 0px 7px;
   font-size: 0.75rem;
   text-shadow: 0 .8px 0 rgba(0, 0, 0, 0.5);
   border-radius: 3px;
