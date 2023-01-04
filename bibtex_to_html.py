@@ -2,7 +2,7 @@
 # @Author:        F. Paul Spitzner
 # @Email:         paul.spitzner@ds.mpg.de
 # @Created:       2021-02-08 14:06:35
-# @Last Modified: 2023-01-03 21:04:32
+# @Last Modified: 2023-01-04 10:45:18
 # ------------------------------------------------------------------------------ #
 #
 # Github: https://github.com/pSpitzner/publicationlist_bibtex_to_html
@@ -272,10 +272,6 @@ def entry_to_html(entry):
 
     # close journal group
     html += '</div>\n'
-
-    # size-dependent newline before the badges, this uses bootstrap classes
-    # html += '<br class="d-block d-lg-none">'
-    html += '<br class="d-block d-lg-block">'
 
     # group badges to avoid weird spacing issues
     html += '<div class="pub_badge_group">\n'
