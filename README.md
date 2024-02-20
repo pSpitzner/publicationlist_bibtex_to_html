@@ -4,7 +4,7 @@ based on an existing bibtex library.
 See a demo on my [website](https://makeitso.one/publications).
 
 ```
-pip install pylatexenc, bibtexparser
+pip install pylatexenc bibtexparser
 ```
 
 One thing I am trying to do is work with arxiv.org ids to fetch altmetrics and create a
